@@ -32,7 +32,7 @@ plate model are fetched by a script rather than committed in tree.
 ```
 pyBacktrack_applications/
 ├── README.md              <- this file
-├── LICENSE                <- MIT (code) + per-dataset attributions
+├── LICENSE                <- GPL v2 (matches pyBacktrack)
 ├── requirements.txt       <- pip install path
 ├── environment.yml        <- conda-forge install path (includes pygplates)
 │
@@ -178,6 +178,7 @@ publishers of each input dataset (see `data/README.md`).
 
 ## Licence
 
-Code is released under the MIT licence; see `LICENSE`. Each input
-dataset retains its publisher's licence; see `data/README.md` for
-per-dataset terms.
+Code is released under the **GNU General Public License v2**, matching
+the licence of pyBacktrack itself; see `LICENSE`. Each input dataset
+retains its publisher's licence; see `data/README.md` for per-dataset
+terms.

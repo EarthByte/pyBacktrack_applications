@@ -1,0 +1,41 @@
+# ----------------------------------------------------------------------------
+# Rendered figures, intermediate grids and animations are all reproducible from
+# the data + scripts in this repo; do not check them in.
+# ----------------------------------------------------------------------------
+figures/output/
+figures/output/**
+
+# ----------------------------------------------------------------------------
+# Derived rate grids and per-well subsidence CSVs written by
+# scripts/07a_backstrip_all_nwshelf.py and read by 09/10/11.  ~30 minutes
+# to regenerate from the wells + bundled pyBacktrack tables; standard
+# reproducible-science pattern.
+# ----------------------------------------------------------------------------
+figures/output/nwshelf_subsidence/
+figures/output/nwshelf_subsidence/**
+
+# ----------------------------------------------------------------------------
+# External global paleobathymetry grids — too large for GitHub.
+# Populate with scripts/fetch_paleobathymetry_grids.sh (Zenodo / GPlates repo).
+# ----------------------------------------------------------------------------
+data/grids/paleobathymetry/
+external_paleobathymetry/
+Zahirovic2022_paleobathymetry_grids/
+Zahirovic2022_paleobathymetry_grids_mantle/
+Straume_paleogeography_grids/
+
+# Compiled python
+__pycache__/
+*.py[cod]
+*.so
+
+# Editor / OS junk
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# Renderer caches
+.cache/
+*.log

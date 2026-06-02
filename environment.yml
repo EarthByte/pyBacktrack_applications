@@ -1,0 +1,34 @@
+# Full conda environment, including pygplates (conda-forge only).
+#
+# Build with:
+#     conda env create -f environment.yml
+#     conda activate pybacktrack-applications
+#
+# pygplates needs to be installed through conda-forge -- it is not on PyPI.
+# pyGMT pulls in the GMT 6.x binary, so no separate GMT install is needed.
+#
+name: pybacktrack-applications
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python>=3.11
+  - pip
+  - gmt>=6.5
+  - pygmt>=0.12
+  - pygplates
+  - gplately>=1.3
+  - numpy>=1.24
+  - xarray>=2023.1
+  - matplotlib>=3.7
+  - cartopy>=0.22
+  - netcdf4>=1.6
+  - scipy>=1.10
+  - python-docx>=1.0
+  - shapely>=2.0
+  # Pin sqlite at the top end so the solver can't silently downgrade it
+  # (see CLAUDE.md "Python environment" notes -- this has bitten before).
+  - sqlite>=3.45
+  - libsqlite>=3.45
+  - pip:
+      - pybacktrack>=1.5

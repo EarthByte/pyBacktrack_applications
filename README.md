@@ -150,7 +150,7 @@ figures, and per-script tunables. LAEA = Lambert Azimuthal Equal-Area projection
 ## Data sources
 
 All input data files are documented in [`data/README.md`](data/README.md)
-with full provenance, citations and licence terms.
+with provenance, citations and licence terms.
 
 * **Wells**: 109 NW Shelf petroleum exploration wells, originally
   redistributed with the pyBacktrack 1.0 release (Müller et al. 2018,

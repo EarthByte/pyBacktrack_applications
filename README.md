@@ -1,4 +1,4 @@
-![Pybacktrack Logo](docs/images/pybacktrack_logo.jpg)
+![Pybacktrack Logo](docs/pybacktrack_logo_text_on_right.png)
 # pyBacktrack_applications
 
 Companion code and data for:

@@ -44,12 +44,16 @@ import paleobathy_render as pbr
 # ============================================================================
 HILLSHADE_ON        = True       # set False to disable shading entirely
 HILLSHADE_AZIMUTH   = "315"      # deg clockwise from north (315 = NW)
-HILLSHADE_NORMALIZE = "e0.6"     # "t<sigma>" (tangent) or "e<sigma>" (exp).
-                                  #   Smaller sigma -> sharper relief.
-                                  #   "t1"   = very gentle tangent
-                                  #   "t0.5" = moderate tangent
-                                  #   "e0.6" = sharper exponential (current)
-                                  #   "e0.4" = quite strong
+HILLSHADE_NORMALIZE = "e0.3+a0.3"  # soft preset: gentle exponential + 30 %
+                                  # ambient illumination.  Compresses the
+                                  # observed-bathy / back-tracked-bathy
+                                  # 0-2 Ma contrast difference so the
+                                  # 0 Ma frame looks consistent with the
+                                  # rest of the time series.
+                                  # Alternatives if you need to tune:
+                                  #   "t1"       = legacy max contrast
+                                  #   "e0.6"     = sharper exponential
+                                  #   "e0.2+a0.5" = very flat texture
 
 
 def _apply_hillshade_settings():

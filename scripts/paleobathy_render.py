@@ -90,11 +90,14 @@ BATHY_CPT_SERIES = [VMIN, VMAX, 100]
 # ----------------------------------------------------------------------------
 HILLSHADE_ON         = True
 HILLSHADE_AZIMUTH    = "315"     # deg clockwise from north (315 = NW)
-HILLSHADE_NORMALIZE  = "e0.6"    # "t<sigma>" tangent or "e<sigma>" exp.
-                                 # Smaller sigma -> sharper relief.
-                                 # "t1"   = very gentle tangent
-                                 # "t0.5" = moderate tangent
-                                 # "e0.6" = sharper exponential
+HILLSHADE_NORMALIZE  = "e0.3+a0.3"  # soft preset: gentle exp + 30% ambient.
+                                 # Compresses the 0-2 Ma observed-bathy /
+                                 # back-tracked-bathy contrast difference
+                                 # that was visible with "t1" / "e0.6".
+                                 # Alternatives:
+                                 #   "t1"      = legacy max contrast
+                                 #   "e0.6"    = sharper exponential
+                                 #   "e0.2+a0.5" = very flat (texture)
 HILLSHADE_INTENSITY  = None      # None = use cached gradient unchanged;
                                  # float in (0, 1] = dim further at
                                  # grdimage time via "+a<val>" modifier.

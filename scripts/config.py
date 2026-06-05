@@ -132,9 +132,10 @@ GRIDS_DIR_INREPO = os.path.join(DATA_DIR, "grids")
 # Toggle between the two Zahirovic et al. (2022) GDH1 grid sets we
 # support:
 #
-#   "Z22_mantle"  - the Z22 grids in the optimised *mantle* reference
-#                   frame.  Default for this repo.
 #   "Z22_PMag"    - the Z22 grids in the *paleomagnetic* reference frame.
+#                   Default for this repo (uses John Cannon's 2026
+#                   pybacktrack-nearneighbor re-grid when available on disk).
+#   "Z22_mantle"  - the Z22 grids in the optimised *mantle* reference frame.
 #
 # Both share the same topology model (Zahirovic 2022 in the GPlates
 # registry); only the anchor plate differs (0 for the mantle frame,
@@ -149,7 +150,7 @@ GRIDS_DIR_INREPO = os.path.join(DATA_DIR, "grids")
 # accepts --source on the command line and sets this env var before
 # importing config).  Leave PALEO_BATHY_SOURCE_DEFAULT as the day-to-day
 # default; the env var takes precedence.
-PALEO_BATHY_SOURCE_DEFAULT = "Z22_mantle"         # "Z22_mantle" | "Z22_PMag"
+PALEO_BATHY_SOURCE_DEFAULT = "Z22_PMag"           # "Z22_PMag" | "Z22_mantle"
 PALEO_BATHY_SOURCE = os.environ.get(
     "PYBACKTRACK_PALEO_BATHY_SOURCE", PALEO_BATHY_SOURCE_DEFAULT)
 
@@ -181,16 +182,33 @@ elif PALEO_BATHY_SOURCE == "Z22_PMag":
     # Zahirovic et al. (2022) GDH1 grids, paleomagnetic reference frame.
     # Topology model: `Zahirovic2022` in the GPlates registry; anchor
     # 701701 pins the paleomagnetic frame.
-    # Source: https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/
-    #         Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/
-    #         PaleomagneticFrame/PaleobathymetryGrids/GDH1/
+    #
+    # Resolution order (first that exists on disk wins):
+    #   1. $PYBT_PALEO_BATHY_DIR override (if set)
+    #   2. data/grids/paleobathymetry/Zahirovic2022_PMag/ (in-repo;
+    #      populated by `scripts/fetch_paleobathymetry_grids.sh paleomagnetic`)
+    #   3. John Cannon's 2026 pybacktrack-nearneighbor re-grid on Dietmar's
+    #      laptop -- this is what the paper figures use by default
+    #   4. legacy mirror of the public Z22 release
+    #
+    # Public-release source for option (2):
+    #   https://repo.gplates.org/webdav/PlateModel_Age_SR_Grids/
+    #   Zahirovic_etal_2022_GDJ/02_AgegridsUsingTopologies/
+    #   PaleomagneticFrame/PaleobathymetryGrids/GDH1/
+    # PAPER_ROOT = pyBacktrack_applications/.  John's nearneighbour
+    # re-grid lives in the parent pyBacktrack1.5/ tree, one level up.
+    _PYB15_ROOT = os.path.dirname(PAPER_ROOT)
     _candidates = [
         os.environ.get("PYBT_PALEO_BATHY_DIR"),
         os.path.join(GRIDS_DIR_INREPO, "paleobathymetry",
                      "Zahirovic2022_PMag"),
+        # John's nearneighbour re-grid in the parent paper tree:
+        os.path.join(_PYB15_ROOT,
+                     "Zahirovic2022_PMag_paleobathymetry_pybacktrack-nearneighbor"),
+        # Legacy laptop mirror of the public Z22 release:
         ("/Users/dietmar/Documents/GPlates/pyBacktrack1.5/"
          "Paleobathymetry_Z22_PMag"),
-        os.path.join(PAPER_ROOT, "Zahirovic2022_paleobathymetry_grids"),
+        os.path.join(_PYB15_ROOT, "Zahirovic2022_paleobathymetry_grids"),
     ]
     PALEO_BATHY_DIR = next(
         (p for p in _candidates if p and os.path.isdir(p)),

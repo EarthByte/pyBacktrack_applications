@@ -1,4 +1,4 @@
-![Pybacktrack Logo](docs/images/pybacktrack_logo_text_on_right.webp)
+<img src="docs/images/pybacktrack_logo_text_on_right.webp" alt="Pybacktrack Logo" width="589">
 # pyBacktrack_applications
 
 Companion code and data for:

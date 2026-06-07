@@ -249,7 +249,98 @@ def _grid_is_drawable(path):
         return False
 
 
-def _save_cpt(cmap, series, out_path, reverse=False, background=False):
+# RGB endpoints of the diverging master CPTs we support for hinged
+# (asymmetric) ranges.  Mapping: cmap_name -> (low_end, midpoint,
+# high_end).  All three are RGB triples interpreted as the colours of
+# the master CPT at z=0, z=0.5 and z=1 respectively.  When `reverse=True`
+# is requested we swap low_end and high_end.
+#
+# We hand-code these (instead of round-tripping through `makecpt -G`)
+# because the truncate-then-concatenate path silently produced a
+# white->red gradient over the full range in practice -- the half-CPT
+# files appear to be written empty or have a format that doesn't
+# concatenate cleanly into GMT 6.x.  Writing the CPT bytes directly
+# from Python is robust and gives us bit-exact control.
+_DIVERGING_CPT_ENDPOINTS = {
+    "polar": ((0, 0, 255), (255, 255, 255), (255, 0, 0)),
+}
+
+# Cmaps with an INTRINSIC HARD HINGE at z=0 baked into the master CPT
+# (e.g. topo's sea-level break, earth, etoposl).  For these, GMT 6.x
+# auto-anchors the hinge to z=0 when -T spans across 0 -- the two
+# halves of the master CPT are stretched independently to [lo, 0] and
+# [0, hi].  No custom Python construction is needed; plain makecpt
+# with the requested series is correct.
+_INTRINSIC_HARD_HINGE_CMAPS = {"topo", "earth", "etoposl", "geo"}
+
+
+def _save_hinged_diverging_cpt(cmap, lo, hi, hinge, step, out_path,
+                               reverse=False):
+    """Write a custom hinged-diverging CPT directly to ``out_path``.
+
+    Interpolates linearly in RGB between the master CPT's documented
+    endpoints (see ``_DIVERGING_CPT_ENDPOINTS``) so that:
+
+    * z in [lo, hinge] runs low_end -> midpoint
+    * z in [hinge, hi] runs midpoint -> high_end
+
+    with the colour transition pinned at ``z = hinge`` regardless of
+    how asymmetric ``[lo, hi]`` is around ``hinge``.
+
+    Step size is shared across both halves.  Both halves may end with
+    a short final cell if (hinge - lo) or (hi - hinge) is not an
+    integer multiple of ``step``.
+    """
+    try:
+        c_low_end, c_mid, c_high_end = _DIVERGING_CPT_ENDPOINTS[cmap]
+    except KeyError as exc:
+        raise NotImplementedError(
+            f"_save_hinged_diverging_cpt: no hard-coded endpoints for "
+            f"cmap '{cmap}'.  Add an entry to "
+            f"_DIVERGING_CPT_ENDPOINTS or call _save_cpt without "
+            f"a hinge."
+        ) from exc
+    if reverse:
+        c_low_end, c_high_end = c_high_end, c_low_end
+
+    def _interp(c0, c1, t):
+        return tuple(int(round(c0[i] + t * (c1[i] - c0[i])))
+                     for i in range(3))
+
+    def _fmt(c):
+        return f"{c[0]}/{c[1]}/{c[2]}"
+
+    def _emit_half(fh, z_start, z_end, c_start, c_end):
+        """Emit step-spaced data rows from z_start to z_end (z_start
+        is inclusive, z_end is the last z that should be present)."""
+        span = z_end - z_start
+        z = z_start
+        eps = step * 1e-6
+        while z < z_end - eps:
+            z_next = min(z + step, z_end)
+            t_lo = (z - z_start) / span
+            t_hi = (z_next - z_start) / span
+            fh.write(
+                f"{z:g} {_fmt(_interp(c_start, c_end, t_lo))} "
+                f"{z_next:g} {_fmt(_interp(c_start, c_end, t_hi))}\n"
+            )
+            z = z_next
+
+    with open(out_path, "w") as fh:
+        fh.write(f"# Hinged diverging CPT, cmap={cmap}, "
+                 f"range=[{lo:g}, {hi:g}], hinge={hinge:g}, "
+                 f"step={step:g}, reverse={reverse}\n")
+        fh.write("# COLOR_MODEL = RGB\n")
+        _emit_half(fh, lo, hinge, c_low_end, c_mid)
+        _emit_half(fh, hinge, hi, c_mid, c_high_end)
+        fh.write(f"B {_fmt(c_low_end)}\n")
+        fh.write(f"F {_fmt(c_high_end)}\n")
+        fh.write("N 200/200/200\n")
+    return out_path
+
+
+def _save_cpt(cmap, series, out_path, reverse=False, background=False,
+              hinge=None):
     """Build a CPT once and persist it to disk so the rendering loop can
     pass a *filename* to grdimage and avoid issuing makecpt inside the
     subplot context (which has caused hangs on macOS Apple-Silicon).
@@ -262,7 +353,24 @@ def _save_cpt(cmap, series, out_path, reverse=False, background=False):
     colour of the master CPT.  Use this for "clamp" semantics on
     one-sided ranges (e.g. rate 0..50 m/Myr): values above 50 then
     render as the 50-m/Myr colour instead of GMT's default white.
+
+    Pass ``hinge=<z>`` to anchor the midpoint of a diverging master CPT
+    at the data value ``z`` (typically 0).  Routes to
+    ``_save_hinged_diverging_cpt`` which writes the CPT directly in
+    Python, bypassing ``makecpt`` entirely.  Only the cmaps listed in
+    ``_DIVERGING_CPT_ENDPOINTS`` are supported in this mode.
     """
+    lo, hi, step = float(series[0]), float(series[1]), float(series[2])
+    if hinge is not None and lo < float(hinge) < hi:
+        if cmap in _INTRINSIC_HARD_HINGE_CMAPS:
+            # Master CPT carries its own hinge tag; trust GMT to
+            # anchor it.  Fall through to plain makecpt below.
+            pass
+        else:
+            return _save_hinged_diverging_cpt(
+                cmap, lo, hi, float(hinge), step, out_path,
+                reverse=reverse,
+            )
     pygmt.makecpt(
         cmap=cmap, series=list(series), continuous=True,
         reverse=reverse, background=background, output=out_path,

@@ -324,7 +324,22 @@ DT_GRIDS_DIR = os.path.join(
 # `04_pybacktrack_vs_straume_comparison.py` as an independent reference
 # to benchmark the released pyBacktrack 1.5 paleobathymetry against.
 # 0.1 deg, 1 Myr, 1-65 Ma, full-earth (no NaN, includes topography).
-STRAUME_GRID_DIR = os.path.join(PAPER_ROOT, "Straume_paleogeography_grids")
+# Public release: https://zenodo.org/records/4193576
+#
+# Resolution order (first directory that exists wins):
+#   1. $PYBT_STRAUME_GRID_DIR override (if set)
+#   2. data/grids/straume_2020/ in the repo (if a future user drops them there)
+#   3. ../Straume_paleogeography_grids/  -- sibling of this paper repo,
+#      matches the layout on Dietmar's laptop
+_PYB15_ROOT_FOR_STRAUME = os.path.dirname(PAPER_ROOT)
+_STRAUME_CANDIDATES = [
+    os.environ.get("PYBT_STRAUME_GRID_DIR"),
+    os.path.join(GRIDS_DIR_INREPO, "straume_2020"),
+    os.path.join(_PYB15_ROOT_FOR_STRAUME, "Straume_paleogeography_grids"),
+]
+STRAUME_GRID_DIR = next(
+    (p for p in _STRAUME_CANDIDATES if p and os.path.isdir(p)),
+    _STRAUME_CANDIDATES[1])   # fall through to repo path even if missing
 STRAUME_GRID_FMT = os.path.join(
     STRAUME_GRID_DIR, "paleobathy-topo_{time:.2f}Ma_Straume_et_al.nc")
 

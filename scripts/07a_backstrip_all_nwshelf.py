@@ -51,6 +51,7 @@ cutoff_time_Ma.txt
 import glob
 import os
 import sys
+import time
 import warnings
 
 import numpy as np
@@ -263,18 +264,33 @@ def run_all_backstripping():
                   "skipping backstripping for this config.  "
                   "Set PYBACKTRACK_FORCE_BACKSTRIP=1 to rerun.")
             continue
+        # Per-well heartbeat so a stalled run is visible; flushing the
+        # CSV every well so the on-disk size also reflects progress.
+        t_start = time.time()
         with open(csv_path, "w") as out_csv:
             out_csv.write("# time_Ma lon lat tectonic_subsidence_m well\n")
-            for wf in well_files:
+            for i, wf in enumerate(well_files, start=1):
                 name = os.path.splitext(os.path.basename(wf))[0]
+                t_well = time.time()
                 try:
                     rows = backstrip_single(wf, cfg_kwargs)
                 except Exception as exc:
-                    print(f"  ! skipping {name}: {exc}")
+                    print(f"  [{i:>3}/{len(well_files)}] ! skipping "
+                          f"{name}: {exc}", flush=True)
                     continue
                 for age, lon, lat, ts in rows:
                     out_csv.write(
                         f"{age:.1f} {lon:.5f} {lat:.5f} {ts:.2f} {name}\n")
+                out_csv.flush()
+                elapsed = time.time() - t_well
+                # Print every well -- it's 1 line/30 s on average so
+                # not noisy and gives an immediate "still alive" signal.
+                eta_min = (time.time() - t_start) / i * (
+                    len(well_files) - i) / 60.0
+                print(f"  [{i:>3}/{len(well_files)}] {name} "
+                      f"({elapsed:5.1f} s/well, "
+                      f"ETA {eta_min:5.1f} min for this config)",
+                      flush=True)
         print(f"  wrote {csv_path}")
 
 

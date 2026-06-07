@@ -183,5 +183,5 @@ for tgt in "${TARGETS[@]}"; do
 done
 
 echo
-echo "All figures written to: $SCRIPT_DIR/../output/"
-ls -1 "$SCRIPT_DIR/../output/" || true
+echo "All figures written to: $SCRIPT_DIR/../figures/output/"
+ls -1 "$SCRIPT_DIR/../figures/output/" || true

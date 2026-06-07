@@ -67,10 +67,18 @@ os.makedirs(GRAD_DIR, exist_ok=True)
 
 
 # ----------------------------------------------------------------------------
-# Colour palette + cpt range.  GMT's "bathy" is the classic blue ramp;
-# VMIN=-5000 / VMAX=0 covers the bathymetric half of typical seafloor.
+# Colour palette + cpt range.  GMT's "bathy" is the classic blue ramp.
+# VMIN=-6000 / VMAX=0 covers essentially every real seafloor depth (deepest
+# ocean ~ -6 km; trenches go deeper but are sparse and easily caught by
+# the +e end-cap clamp).  Choosing -6000 (vs the earlier -5500) also
+# side-steps an empirical issue where cells deeper than the series range
+# still rendered as dark grey even with background=True on the makecpt
+# call -- best guess is that GMT's hillshade multiplication onto the
+# near-black bottom colour produces a perceptually grey result, but
+# extending the range further pushes those cells inside the cpt so the
+# question is moot.
 # ----------------------------------------------------------------------------
-VMIN = -5000.0
+VMIN = -6000.0
 VMAX = 0.0
 BATHY_CMAP = "bathy"
 BATHY_CPT_SERIES = [VMIN, VMAX, 100]

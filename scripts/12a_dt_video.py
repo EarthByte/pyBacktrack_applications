@@ -3,16 +3,17 @@
 Figure 12 video - 1 Myr animation of raw dynamic topography over the
 NW Shelf.
 
-Per-Myr companion to `11_dt_maps.py`: renders one single-panel frame
+Per-Myr companion to `12_dt_maps.py`: renders one single-panel frame
 per Myr in [0, MAX_ANALYSIS_AGE] showing the bundled D10_gmcm9
 dynamic-topography elevation anomaly (Braz et al., 2021), linearly
 interpolated in time between the 5 Myr bundled grids and upsampled
 spatially through the same `blockmedian -> surface` pipeline (0.05
-deg, tension 0.5) and concave-hull mask used in Fig 9 and Fig 11.
+deg, tension 0.5) and concave-hull mask used in Fig 10 and Fig 12.
 
-Frame styling -- vik diverging colourmap, -400 to +400 m range, +e
-clamp arrows, shoreline, panel label -- matches `11_dt_maps.py` so
-the animation is visually continuous with the static figure.
+Frame styling -- topo hypsometric colourmap, -350 to +50 m range
+with sea-level hinge at z=0 and `+ebf` clamp arrows on the
+colourbar, shoreline, panel label -- matches `12_dt_maps.py` so the
+animation is visually continuous with the static figure.
 
 Outputs:
     figures/output/dt_field/frames/frame_NNNN.png
@@ -22,9 +23,9 @@ Outputs:
         ^ chronological forward (0 -> MAX_ANALYSIS_AGE)
 
 Usage:
-    python3 11a_dt_video.py                  # full 0..MAX_ANALYSIS_AGE
-    python3 11a_dt_video.py --time-step 5    # quick coarse check
-    python3 11a_dt_video.py --max-age 100    # truncate
+    python3 12a_dt_video.py                  # full 0..MAX_ANALYSIS_AGE
+    python3 12a_dt_video.py --time-step 5    # quick coarse check
+    python3 12a_dt_video.py --max-age 100    # truncate
 """
 import argparse
 import importlib.util
@@ -50,22 +51,23 @@ def _import_sibling(name, filename):
     return mod
 
 
-_fig11 = _import_sibling("_fig11", "11_dt_maps.py")
-_fig09 = _import_sibling("_fig09", "09_rate_maps.py")
+_fig12 = _import_sibling("_fig12", "12_dt_maps.py")
+_fig10 = _import_sibling("_fig10", "10_rate_maps.py")
 
-REGION = _fig11.REGION
-DT_CMAP = _fig11.DT_CMAP
-DT_CMAP_REVERSE = _fig11.DT_CMAP_REVERSE
-DT_SERIES = _fig11.DT_SERIES
-DT_CBAR_TICKS = _fig11.DT_CBAR_TICKS
-DT_CBAR_END_ARROWS = _fig11.DT_CBAR_END_ARROWS
-PANEL_TITLE_FONT = _fig11.PANEL_TITLE_FONT
-REGRID_SPACING = _fig11.REGRID_SPACING
-_save_cpt = _fig11._save_cpt
-_load_dt_stack = _fig11._load_dt_stack
-make_masked_dt_grid = _fig11.make_masked_dt_grid
-_concave_hull_mask = _fig09._concave_hull_mask
-_well_locations = _fig09._well_locations
+REGION = _fig12.REGION
+DT_CMAP = _fig12.DT_CMAP
+DT_CMAP_REVERSE = _fig12.DT_CMAP_REVERSE
+DT_CMAP_HINGE = _fig12.DT_CMAP_HINGE
+DT_SERIES = _fig12.DT_SERIES
+DT_CBAR_TICKS = _fig12.DT_CBAR_TICKS
+DT_CBAR_END_ARROWS = _fig12.DT_CBAR_END_ARROWS
+PANEL_TITLE_FONT = _fig12.PANEL_TITLE_FONT
+REGRID_SPACING = _fig12.REGRID_SPACING
+_save_cpt = _fig12._save_cpt
+_load_dt_stack = _fig12._load_dt_stack
+make_masked_dt_grid = _fig12.make_masked_dt_grid
+_concave_hull_mask = _fig10._concave_hull_mask
+_well_locations = _fig10._well_locations
 
 
 # ----------------------------------------------------------------------------
@@ -168,7 +170,8 @@ def main():
     cpt_dir = os.path.join(OUTPUT_DIR, "nwshelf_subsidence", "cpts")
     os.makedirs(cpt_dir, exist_ok=True)
     dt_cpt = os.path.join(cpt_dir, "fig12_dt.cpt")
-    _save_cpt(DT_CMAP, DT_SERIES, dt_cpt, reverse=DT_CMAP_REVERSE)
+    _save_cpt(DT_CMAP, DT_SERIES, dt_cpt,
+              reverse=DT_CMAP_REVERSE, hinge=DT_CMAP_HINGE)
 
     os.makedirs(FRAME_DIR, exist_ok=True)
 

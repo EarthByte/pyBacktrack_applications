@@ -8,19 +8,18 @@
 #
 # Targets:
 #   02     - Fig 2 (LAEA on mid-N-Atlantic) per-Myr video
-#   03a    - Fig 3 LAEA south-pole paleobathymetry video (default source)
-#   03b    - Fig 3 LAEA south-pole paleobathymetry video, Z22 hardwired
+#   03     - Fig 3 (LAEA south-pole) per-Myr video
 #   10a    - NW Shelf well-derived subsidence-rate videos (A, C, D)
 #   12a    - NW Shelf raw dynamic-topography video
 #
 # Usage:
-#   ./make_all_videos.sh                  # rebuild ALL five from scratch
-#   ./make_all_videos.sh 02 03a           # rebuild a subset from scratch
+#   ./make_all_videos.sh                  # rebuild ALL four from scratch
+#   ./make_all_videos.sh 02 03            # rebuild a subset from scratch
 #   ./make_all_videos.sh --no-force 10a   # honour cached frames for 10a
 #   ./make_all_videos.sh --skip-stitch    # render frames but skip ffmpeg
 #
 # By default every script is invoked with --force, so existing frame
-# caches under figures/output/{southpole_paleobathy,northpole_paleobathy,
+# caches under figures/output/{southern_ocean_paleobathy,north_atlantic_paleobathy,
 # nwshelf_subsidence,dt_field}/ are wiped first.
 # Pass --no-force to fall back to the default "skip frames that already
 # exist" policy baked into each script.
@@ -29,9 +28,9 @@
 #   - ffmpeg on PATH
 #   - For 10a: figures/output/nwshelf_subsidence/{rate_*.nc,
 #     all_wells_locations.txt} produced by 07a_backstrip_all_nwshelf.py
-#   - For 11a: same well-locations file, plus
+#   - For 12a: same well-locations file, plus
 #     figures/output/nwshelf_subsidence/rate_delta_picked_times.txt
-#     written by 09_rate_maps.py (the four times used as static-figure
+#     written by 10_rate_maps.py (the four times used as static-figure
 #     panels; the video reuses them only as a cross-check anchor).
 # ============================================================================
 set -euo pipefail
@@ -48,21 +47,21 @@ for arg in "$@"; do
   case "$arg" in
     --no-force)    FORCE_FLAG="" ;;
     --skip-stitch) SKIP_STITCH=1 ;;
-    02|03a|03b|10a|12a) TARGETS+=("$arg") ;;
+    02|03|10a|12a) TARGETS+=("$arg") ;;
     -h|--help)
       sed -n '1,/^set -euo pipefail/p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
-      echo "Unknown argument: $arg (expected: 02, 03a, 03b, 10a, 12a, --no-force, --skip-stitch, --help)" >&2
+      echo "Unknown argument: $arg (expected: 02, 03, 10a, 12a, --no-force, --skip-stitch, --help)" >&2
       exit 2
       ;;
   esac
 done
 if [ ${#TARGETS[@]} -eq 0 ]; then
-  # Default rebuild list: Fig 2 video, both Fig 3 video variants, and the
-  # NW Shelf rate + DT videos.
-  TARGETS=(02 03a 03b 10a 12a)
+  # Default rebuild list: Fig 2 + Fig 3 paleobathy videos, plus the NW
+  # Shelf rate + DT videos.
+  TARGETS=(02 03 10a 12a)
 fi
 
 # ---------------------------------------------------------------------------
@@ -74,7 +73,10 @@ if [ "$SKIP_STITCH" -eq 0 ] && ! command -v ffmpeg >/dev/null 2>&1; then
   exit 3
 fi
 
-OUT_DIR="$SCRIPT_DIR/../output"
+# Match the OUTPUT_DIR resolved by scripts/config.py
+# (REPO_ROOT/figures/output, NOT REPO_ROOT/output -- the latter is a
+# legacy layout from before the figures/ subdirectory was introduced).
+OUT_DIR="$SCRIPT_DIR/../figures/output"
 NWSHELF_DIR="$OUT_DIR/nwshelf_subsidence"
 
 # Per-target prerequisite checks (only fire if the target is requested).
@@ -86,14 +88,14 @@ for tgt in "${TARGETS[@]}"; do
          || ! ls "$NWSHELF_DIR/D_rate_difference"/rate_*.nc >/dev/null 2>&1 \
          || [ ! -f "$NWSHELF_DIR/all_wells_locations.txt" ]; then
         echo "ERROR: 10a requires NW Shelf rate grids + well-locations file." >&2
-        echo "       Run ./run_all_figures.sh fig08 first." >&2
+        echo "       Run ./run_all_figures.sh fig09 first." >&2
         exit 4
       fi
       ;;
     12a)
       if [ ! -f "$NWSHELF_DIR/all_wells_locations.txt" ]; then
         echo "ERROR: 12a requires $NWSHELF_DIR/all_wells_locations.txt" >&2
-        echo "       Run ./run_all_figures.sh fig08 first." >&2
+        echo "       Run ./run_all_figures.sh fig09 first." >&2
         exit 4
       fi
       # picked-times sidecar is optional (11a falls back to a hardcoded
@@ -132,12 +134,10 @@ run_step() {
 
 for tgt in "${TARGETS[@]}"; do
   case "$tgt" in
-    02)  run_step "02  Fig 2: LAEA on mid-N-Atlantic" \
+    02)  run_step "02 Fig 2: LAEA on mid-N-Atlantic" \
                   "02_north_atlantic_paleobathymetry_video.py" ;;
-    03a) run_step "03a Fig 3: LAEA south-pole (default source)" \
-                  "03a_southern_ocean_paleobathymetry_video.py" ;;
-    03b) run_step "03b Fig 3: LAEA south-pole (Z22 hardwired)" \
-                  "03b_southern_ocean_paleobathymetry_video_Z22.py" ;;
+    03)  run_step "03 Fig 3: LAEA south-pole" \
+                  "03_southern_ocean_paleobathymetry_video.py" ;;
     10a) run_step "10a NW Shelf subsidence-rate videos (A, C, D)" \
                   "10a_make_subsidence_videos.py" ;;
     12a) run_step "12a NW Shelf raw dynamic-topography video" \

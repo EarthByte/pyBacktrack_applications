@@ -70,26 +70,26 @@ def _parse_args():
 _args = _parse_args()
 
 
-# Reuse Fig 9 helpers via importlib so the per-frame look matches
+# Reuse Fig 10 helpers via importlib so the per-frame look matches
 # exactly (concave-hull mask, blockmedian->surface upsampling, CPT
 # builder, cached well loader).
 _spec = importlib.util.spec_from_file_location(
-    "_fig09",
-    os.path.join(os.path.dirname(__file__), "09_rate_maps.py"),
+    "_fig10",
+    os.path.join(os.path.dirname(__file__), "10_rate_maps.py"),
 )
-_fig09 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_fig09)
+_fig10 = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_fig10)
 
-REGION = _fig09.REGION
-RATE_CMAP = _fig09.RATE_CMAP
-RATE_SERIES = _fig09.RATE_SERIES
-DELTA_CMAP = _fig09.DELTA_CMAP
-DELTA_SERIES = _fig09.DELTA_SERIES
-PANEL_TITLE_FONT = _fig09.PANEL_TITLE_FONT
-_save_cpt = _fig09._save_cpt
-make_continuous_masked_grid = _fig09.make_continuous_masked_grid
-_well_locations = _fig09._well_locations
-_grid_is_drawable = _fig09._grid_is_drawable
+REGION = _fig10.REGION
+RATE_CMAP = _fig10.RATE_CMAP
+RATE_SERIES = _fig10.RATE_SERIES
+DELTA_CMAP = _fig10.DELTA_CMAP
+DELTA_SERIES = _fig10.DELTA_SERIES
+PANEL_TITLE_FONT = _fig10.PANEL_TITLE_FONT
+_save_cpt = _fig10._save_cpt
+make_continuous_masked_grid = _fig10.make_continuous_masked_grid
+_well_locations = _fig10._well_locations
+_grid_is_drawable = _fig10._grid_is_drawable
 
 
 # ----------------------------------------------------------------------------

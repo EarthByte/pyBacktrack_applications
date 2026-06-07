@@ -46,15 +46,9 @@ import paleobathy_render as pbr
 HILLSHADE_ON        = True       # set False to disable shading entirely
 HILLSHADE_AZIMUTH   = "315"      # deg clockwise from north (315 = NW)
 HILLSHADE_NORMALIZE = "e0.3+a0.3"  # soft preset: gentle exponential + 30 %
-                                  # ambient illumination.  Compresses the
-                                  # observed-bathy / back-tracked-bathy
-                                  # 0-2 Ma contrast difference so the
-                                  # 0 Ma frame looks consistent with the
-                                  # rest of the time series.
-                                  # Alternatives if you need to tune:
-                                  #   "t1"       = legacy max contrast
-                                  #   "e0.6"     = sharper exponential
-                                  #   "e0.2+a0.5" = very flat texture
+                                  # ambient illumination.  Same as the
+                                  # video so the static panels and the
+                                  # animation look consistent.
 
 
 def _apply_hillshade_settings():
@@ -62,10 +56,19 @@ def _apply_hillshade_settings():
     paleobathy_render module and wipe its cached gradients for this
     figure's TIMES_MA so the new settings actually take effect on
     the very next pygmt.grdgradient call.
+
+    Set PYBT_KEEP_HILLSHADE_CACHE=1 in the environment to SKIP the
+    wipe step -- useful when you've only changed the CPT, fonts, or
+    overlay settings and want to keep the (slow) hillshade gradients
+    from the last run.
     """
     pbr.HILLSHADE_ON        = HILLSHADE_ON
     pbr.HILLSHADE_AZIMUTH   = HILLSHADE_AZIMUTH
     pbr.HILLSHADE_NORMALIZE = HILLSHADE_NORMALIZE
+    if os.environ.get("PYBT_KEEP_HILLSHADE_CACHE"):
+        print("  PYBT_KEEP_HILLSHADE_CACHE set -- keeping existing "
+              f"gradient cache for ages {TIMES_MA}")
+        return
     pbr.wipe_gradient_cache(TIMES_MA)
 
 
@@ -137,8 +140,14 @@ def plot_one_time(time_ma, gplot):
                                               #   the xa60g60 annotation interval.
         MAP_GRID_PEN_PRIMARY="1p,gray30",     # visible 60/30 deg graticule
     )
+    # background=True clamps out-of-range cells (depths > 5000 m) to the
+    # endpoint colour instead of rendering them white.  No output= here:
+    # the downstream paleobathy_render.draw_paleobathymetry passes
+    # cmap=True to grdimage, which means "use the session-current CPT",
+    # and adding output= breaks that hand-off (grdimage falls back to
+    # GMT's default rainbow palette).
     pygmt.makecpt(cmap=BATHY_CMAP, series=BATHY_CPT_SERIES,
-                  continuous=True)
+                  continuous=True, background=True)
 
     # LAEA projection (A) with south-pole centre and 50 deg horizon cap.
     # 60 deg lon / 30 deg lat graticule; no centred title (the age is
@@ -204,8 +213,14 @@ def plot_four_panel(gplot):
                                               #   the xa60g60 annotation interval.
         MAP_GRID_PEN_PRIMARY="1p,gray30",     # visible 60/30 deg graticule
     )
+    # background=True clamps out-of-range cells (depths > 5000 m) to the
+    # endpoint colour instead of rendering them white.  No output= here:
+    # the downstream paleobathy_render.draw_paleobathymetry passes
+    # cmap=True to grdimage, which means "use the session-current CPT",
+    # and adding output= breaks that hand-off (grdimage falls back to
+    # GMT's default rainbow palette).
     pygmt.makecpt(cmap=BATHY_CMAP, series=BATHY_CPT_SERIES,
-                  continuous=True)
+                  continuous=True, background=True)
 
     # Manual 2x2 layout via shift_origin instead of fig.subplot().
     # Reason: pyGMT subplot consistently DROPS the per-panel lat/lon

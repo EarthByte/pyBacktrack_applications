@@ -66,6 +66,15 @@ def discover_common_times():
     """Sorted list of integer ages (Ma) where both grid sets have a
     file.
     """
+    if not os.path.isdir(STRAUME_GRID_DIR):
+        sys.exit(
+            "Straume 2020 grid directory not found:\n"
+            f"    {STRAUME_GRID_DIR}\n"
+            "Download the Straume et al. (2020) paleobathymetry release\n"
+            "from https://zenodo.org/records/4193576 and place the .nc\n"
+            "files into one of the locations config.py looks at "
+            "(see comment block above STRAUME_GRID_DIR in config.py),\n"
+            "or point $PYBT_STRAUME_GRID_DIR at the directory you have.")
     straume_re = re.compile(r"paleobathy-topo_([0-9]+(?:\.[0-9]+)?)Ma_")
     s_times = set()
     for fn in os.listdir(STRAUME_GRID_DIR):

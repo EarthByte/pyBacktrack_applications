@@ -78,22 +78,32 @@ REGION = [113, 132, -22, -8]                  # match Fig 9
 # data points outside the masked region (avoids edge ringing).
 GRID_BUFFER_DEG = 4.0
 
-# GMT's `cool` sequential palette, reversed via the pygmt
-# `reverse=True` flag so magenta marks the most negative anomaly
-# (-350 m) and cyan marks 0 m.  Range -350 m to 0 m covers the
-# masked NW Shelf DT signal: values smaller than -350 m exist
-# (D10_gmcm9 dips below this on parts of the shelf) and are clamped
-# to the bottom colour, with a low-end triangle on the colourbar
-# (`+eb`) flagging the clamp.  The upper end is at 0 m and the
-# masked NW-Shelf-only field never goes positive, so no upper-end
-# triangle is drawn.  The reversal is done via pygmt's `reverse=True`
-# kwarg (not the `+i` cmap-name suffix), since the suffix path is
-# unreliable on some pygmt / GMT combinations.
-DT_CMAP = "cool"
-DT_CMAP_REVERSE = True                        # invert the master CPT
-DT_SERIES = (-350, 0, 10)                     # m
+# GMT's `polar` diverging palette: blue = negative DT (subsided down
+# relative to today), white = 0 (same as today), red = positive DT
+# (uplifted relative to today).  polar has a hinge baked into its
+# master CPT at z=0, so the white midpoint anchors to z=0 regardless
+# of how asymmetric the series range is -- exactly what we want for
+# the masked NW Shelf DT field, which at the picked times is
+# dominantly negative (down to ~-350 m) but has a moderate positive
+# band at ~112 Ma (up to ~+50 m).  Cells outside [-350, +50] clamp to
+# the endpoint colours, with triangular arrows on BOTH ends of the
+# colourbar (`+ebf`) flagging the clamp.
+#
+# Tried polar first (custom Python-built CPT to pin white at z=0); the
+# user asked to switch to GMT's hypsometric `topo` palette, which has
+# a HARD HINGE built into its master CPT at sea level (z=0).  GMT
+# 6.5/6.6 honours intrinsic hard hinges automatically when `-T` spans
+# across z=0 -- the two halves of the master CPT are stretched
+# independently to [lo, 0] and [0, hi], so the sea-level colour break
+# lands exactly at z=0 regardless of how asymmetric the range is.
+# Semantically nice for DT: negative DT renders as ocean blues,
+# positive DT as land greens/browns.  No custom Python path needed.
+DT_CMAP = "topo"
+DT_CMAP_REVERSE = False
+DT_SERIES = (-350, 50, 10)                    # m
+DT_CMAP_HINGE = 0                             # auto-honoured by topo's intrinsic hard hinge
 DT_CBAR_TICKS = "a50f25"                      # major every 50 m
-DT_CBAR_END_ARROWS = "+eb"                    # low-end arrow only
+DT_CBAR_END_ARROWS = "+ebf"                   # both-end arrows
 
 PANEL_TITLE_FONT = "16p,Helvetica-Bold"
 
@@ -309,7 +319,8 @@ def plot_matrix(picked_times, grid_times, dt_stack, lon_vec, lat_vec, mask):
     os.makedirs(cpt_dir, exist_ok=True)
     dt_cpt = os.path.join(cpt_dir, "fig12_dt.cpt")
     print(f"  building {DT_CMAP} CPT {DT_SERIES} -> {dt_cpt}")
-    _save_cpt(DT_CMAP, DT_SERIES, dt_cpt, reverse=DT_CMAP_REVERSE)
+    _save_cpt(DT_CMAP, DT_SERIES, dt_cpt,
+              reverse=DT_CMAP_REVERSE, hinge=DT_CMAP_HINGE)
 
     fig = pygmt.Figure()
     pygmt.config(

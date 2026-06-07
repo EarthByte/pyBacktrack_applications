@@ -23,7 +23,7 @@ A startup banner echoes the resolved source / dir / plate model / anchor.
 Outputs (source-aware so Z22_mantle and Z22_PMag videos coexist;
 distinct filename prefix from the canonical Fig 2 global video so this
 script never clobbers it):
-    figures/output/northpole_paleobathy/frames_<SOURCE>/frame_NNNN.png
+    figures/output/north_atlantic_paleobathy/frames_<SOURCE>/frame_NNNN.png
     figures/output/fig02_paleobathymetry_video_<SOURCE>.mp4
     figures/output/fig02_paleobathymetry_video_<SOURCE>_forward.mp4
 
@@ -67,7 +67,7 @@ def _parse_args():
               "config.py."),
     )
     p.add_argument(
-        "--max-age", type=int, default=170,
+        "--max-age", type=int, default=150,
         help="Oldest frame in Ma (default: 170, matches Z22 grid range).",
     )
     p.add_argument(
@@ -142,8 +142,8 @@ FRAMERATE = _args.framerate
 
 # Source-aware paths so the Z22_mantle and Z22_PMag runs never clobber
 # each other's frame caches.  Distinct top-level dir from the south-pole
-# video (`southpole_paleobathy/`) so the two polar views coexist.
-OUT_BASE = os.path.join(OUTPUT_DIR, "northpole_paleobathy")
+# video (`southern_ocean_paleobathy/`) so the two views coexist.
+OUT_BASE = os.path.join(OUTPUT_DIR, "north_atlantic_paleobathy")
 FRAME_DIR = os.path.join(OUT_BASE, f"frames_{SOURCE}")
 os.makedirs(FRAME_DIR, exist_ok=True)
 
@@ -208,7 +208,12 @@ def render_frame(time_ma, gplot, force=False):
         COLOR_NAN=NAN_COLOR, MAP_FRAME_TYPE="fancy",
         MAP_GRID_PEN_PRIMARY="0.6p,gray40",   # visible 60/30 deg graticule
     )
-    pygmt.makecpt(cmap=BATHY_CMAP, series=BATHY_CPT_SERIES, continuous=True)
+    # background=True clamps out-of-range cells (depths > 5000 m) to the
+    # endpoint colour instead of rendering them white.  No output= here:
+    # downstream grdimage uses the session-current CPT (cmap=True), and
+    # adding output= breaks that hand-off (GMT default rainbow palette).
+    pygmt.makecpt(cmap=BATHY_CMAP, series=BATHY_CPT_SERIES,
+                  continuous=True, background=True)
 
     # LAEA with HORIZON_DEG cap; `region="g"` global, the horizon in
     # the projection string does the cropping.  60/30 deg graticule;
@@ -245,8 +250,17 @@ def _wipe_gradient_cache_if_forced():
     keys its cache only on the integer age, so stale grad files
     produced under different HILLSHADE_* params silently survive a
     plain frame-only --force.
+
+    Set PYBT_KEEP_HILLSHADE_CACHE=1 in the environment to override
+    --force on the gradient side only (frames still get re-rendered,
+    but the existing per-age gradient .nc files are kept).  Useful
+    when you want to redo frames against the same hillshade.
     """
     if not _args.force:
+        return
+    if os.environ.get("PYBT_KEEP_HILLSHADE_CACHE"):
+        print("  PYBT_KEEP_HILLSHADE_CACHE set -- keeping gradient "
+              "cache even with --force (frame PNGs still wiped)")
         return
     grad_dir = pbr.GRAD_DIR
     if not os.path.isdir(grad_dir):

@@ -5,9 +5,7 @@
 Companion code and data for:
 
 > Müller, R. D., Cannon, J., Williams, S., Dutkiewicz, A., and Wright, N. M.
-> **pyBacktrack 1.5: gridded paleobathymetry, well backstripping and gridded
-> subsidence-rate analysis.** *Geoscientific Model Development* (in
-> preparation, 2026).
+> **PyBacktrack 1.5: A community tool for reconstructing paleobathymetry of drill sites, geohistory and global paleobathymetry** *Geoscientific Model Development* (submitted to GMD).
 
 This repository contains every figure script, every input dataset and the
 helper utilities needed to reproduce the figures in the paper from scratch.

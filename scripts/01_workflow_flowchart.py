@@ -186,16 +186,27 @@ def main():
         kind="output", fontsize=11)
 
     # -------------------- Arrows --------------------
-    # Inputs row 1 -> row 2  (top column verticals, x = 2.0, 6.0, 10.0)
-    for xc in (2.0, 6.0, 10.0):
-        arrow(ax, xc, 12.55, xc, 12.20)
-
-    # Row 2 -> row 3 (sea-level curve)
-    for xc in (2.0, 6.0, 10.0):
-        arrow(ax, xc, 11.25, CX, 10.95)
-
-    # Row 3 -> row 4
-    arrow(ax, CX, 10.10, CX, 9.75)
+    # Every input box feeds the per-grid-point loop directly.  Earlier
+    # revisions had the row-2 inputs converge on the sea-level-curve
+    # box, which incorrectly implied they were inputs to the sea-level
+    # model (John Cannon review, 2026-06).  Each of the seven input
+    # boxes now arrows straight into a distinct x along the top edge
+    # of the loop-entry blue box ("For every present-day grid point
+    # ..."), spanning x in [2.5, 9.5] at y = 9.70.  Arrow lines pass
+    # behind intermediate boxes (peach facecolors are opaque, box
+    # zorder=2 > arrow zorder=1), so the diagram reads as a clean
+    # funnel of inputs converging on the loop entry.
+    LOOP_TOP_Y = 9.70
+    # Row 1 (y=13, h=0.9 -> bottom 12.55)
+    arrow(ax, 2.0, 12.55, 3.0, LOOP_TOP_Y)   # Age grid
+    arrow(ax, 6.0, 12.55, 5.5, LOOP_TOP_Y)   # Sediment thickness
+    arrow(ax, 10.0, 12.55, 8.5, LOOP_TOP_Y)  # Bathymetry
+    # Row 2 (y=11.7, h=0.9 -> bottom 11.25)
+    arrow(ax, 2.0, 11.25, 3.5, LOOP_TOP_Y)   # Rift age grids
+    arrow(ax, 6.0, 11.25, 6.0, LOOP_TOP_Y)   # Plate model
+    arrow(ax, 10.0, 11.25, 9.0, LOOP_TOP_Y)  # Dynamic topography
+    # Row 3 (y=10.5, h=0.8 -> bottom 10.10)
+    arrow(ax, CX, 10.10, 6.5, LOOP_TOP_Y)    # Sea-level curve
 
     # Row 4 loop -> branching (decision + sediment sample)
     arrow(ax, CX, 8.90, 2.6, 8.50)
@@ -206,6 +217,12 @@ def main():
           label_offset=(-0.55, 0.10))
     arrow(ax, 2.9, 7.55, 3.9, 7.10, label="no",
           label_offset=(0.55, 0.10))
+
+    # Sample sediment thickness (row 5 R) -> Decompact sediment column
+    # (row 6 R).  Was missing in earlier revisions (John Cannon review,
+    # 2026-06); without this, Decompact appeared to start from nowhere
+    # and the sediment-sampling step had no visible outflow.
+    arrow(ax, 8.8, 7.55, 8.8, 7.10)
 
     # Row 6 -> combine (row 7)
     arrow(ax, 1.3, 6.10, 4.0, 5.65)
